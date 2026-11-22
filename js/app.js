@@ -1849,9 +1849,10 @@
     const form = $('#formKursus'); if (!form) return;
     const data = bacaFormKursus(), g = $('#galatKursus');
     g.textContent = '';
-    if (data.judul.length < 3) { g.textContent = 'Judul kursus minimal 3 karakter.'; return; }
-    if (data.thumbnail_url && !urlValid(data.thumbnail_url)) { g.textContent = 'URL cover harus diawali https://'; return; }
-    if (data.url_beli && !urlValid(data.url_beli)) { g.textContent = 'URL pembelian harus diawali https://'; return; }
+    const tolak = pesan => { g.textContent = pesan; toast('Belum tersimpan: ' + pesan, 'galat', { durasi: 7000 }); };
+    if (data.judul.length < 3) return tolak('Judul kursus minimal 3 karakter.');
+    if (data.thumbnail_url && !urlValid(data.thumbnail_url)) return tolak('URL cover harus diawali https://');
+    if (data.url_beli && !urlValid(data.url_beli)) return tolak('URL pembelian Lynk harus diawali https:// (kosongkan bila belum dipakai).');
     const k = I.kursus.get(data.id_kursus), lama = Object.assign({}, k);
     Object.assign(k, data, { rating: Number(data.rating) || 0 });
     tandaiKotor('beranda', 'kursus', 'belajar'); breadcrumb();
@@ -1861,7 +1862,7 @@
       const r = await server('simpanKursus', S.token, data);
       Object.assign(k, r); simpanSnapshot();
       bannerEditor('<b>Tersimpan:</b> detail kursus disinkronkan ke Google Sheets (<code>Sheet: Kursus</code>).');
-    } catch (e) { Object.assign(k, lama); g.textContent = e.message; bannerEditor(esc(e.message), 'peringatan'); }
+    } catch (e) { Object.assign(k, lama); g.textContent = e.message; bannerEditor(esc(e.message), 'peringatan'); toast('Belum tersimpan: ' + e.message, 'galat', { durasi: 7000 }); }
     finally { if (segera) setTombol(btn, false); }
   }
   const autosaveKursus = debounce(() => simpanKursus(false), 1200);
@@ -1873,7 +1874,7 @@
     $('#sampulEdit').innerHTML = '<div class="sampul"><img src="' + lokal + '" alt=""></div>';
     try {
       const r = await unggah(file, 'sampul', f => { st.textContent = 'Mengunggah cover… ' + Math.round(f * 100) + '%'; });
-      if (r.url) { $('#kThumb').value = r.url; st.textContent = 'Cover tersimpan di Drive (dapat dilihat publik).'; simpanKursus(false); }
+      if (r.url) { $('#kThumb').value = r.url; st.textContent = 'Cover terunggah ke Drive. Menyimpan kursus…'; await simpanKursus(false); if (!$('#galatKursus').textContent) st.textContent = 'Cover tersimpan di Drive dan kursus sudah disimpan.'; else st.textContent = 'Cover terunggah, tetapi kursus belum tersimpan: ' + $('#galatKursus').textContent; }
       else { st.textContent = r.peringatan || 'Cover terunggah tanpa URL publik.'; }
     } catch (e) { st.textContent = e.message; }
   }
