@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Verifikasi Lembar Disposisi · E-Agenda</title>
+  <meta name="description" content="Verifikasi publik keaslian Lembar Disposisi ber-QR dari E-Agenda.">
+  <meta name="theme-color" content="#0B1437">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://script.google.com" crossorigin>
+  <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+  <link rel="stylesheet" href="css/style.css?v=1.0.0">
+  <style>
+    body { background: radial-gradient(900px 420px at 50% -120px, #1E2A6B 0%, transparent 70%), var(--sb); min-height: 100vh; }
+    .vf { max-width: 640px; margin: 0 auto; padding: 28px 16px calc(32px + env(safe-area-inset-bottom, 0px)); }
+    .vf-kop { display: flex; align-items: center; gap: 14px; color: #fff; margin-bottom: 18px; }
+    .vf-kop .login-logo { width: 58px; height: 58px; flex: none; }
+    .vf-kop .login-logo .ik { width: 28px; height: 28px; }
+    .vf-kop b { display: block; font: 700 18px/1.25 var(--f-judul); }
+    .vf-kop span { display: block; color: var(--aksen); font-size: 13px; font-weight: 600; margin-top: 2px; }
+    .vf-kartu { padding: 22px; }
+    .vf-status { display: flex; gap: 14px; align-items: center; padding: 16px; border-radius: 14px; margin-bottom: 18px; }
+    .vf-status .ik { width: 40px; height: 40px; flex: none; }
+    .vf-status b { display: block; font: 700 18px/1.25 var(--f-judul); letter-spacing: .01em; }
+    .vf-status span { display: block; font-size: 13px; margin-top: 2px; }
+    .vf-status.sah { background: var(--sukses-bg); color: #166534; border: 1px solid #BBF7D0; }
+    .vf-status.tidak { background: var(--bahaya-bg); color: var(--bahaya-tua); border: 1px solid #FECACA; }
+    .vf-status.tunggu { background: var(--primer-muda); color: var(--primer-tua); border: 1px solid var(--primer-garis); }
+    .vf h3 { font-size: 14px; margin: 20px 0 10px; color: #334155; letter-spacing: .02em; }
+    .vf-kaki { color: #8B93B8; font-size: 12px; text-align: center; margin-top: 16px; line-height: 1.6; }
+    .vf-kaki a { color: #C7D2FE; }
+    .vf .tl { display: grid; gap: 0; }
+    .vf .progres { height: 8px; background: #F1F5F9; border-radius: 99px; overflow: hidden; margin-top: 6px; }
+    .vf .progres i { display: block; height: 100%; background: var(--sukses); border-radius: 99px; }
+  </style>
+</head>
+<body>
+  <main class="vf">
+    <header class="vf-kop"><div class="login-logo" id="vf-logo" aria-hidden="true"></div><div><b id="vf-inst">E-Agenda</b><span>Sistem Verifikasi Publik Lembar Disposisi</span></div></header>
+    <section class="kartu vf-kartu" id="vf-isi" aria-live="polite">
+      <div class="vf-status tunggu"><div class="putar gelap" style="width:28px;height:28px;border-width:3px"></div><div><b>Memeriksa keaslian…</b><span>Menghubungi Buku Agenda resmi instansi.</span></div></div>
+    </section>
+    <p class="vf-kaki">Halaman ini memeriksa tanda tangan digital (HMAC-SHA256) pada kode QR lembar disposisi dan mencocokkannya dengan Buku Agenda elektronik. Data rahasia tidak ditampilkan.<br>E-Agenda · Agenda &amp; Disposisi Digital</p>
+  </main>
+  <script src="js/config.js?v=1.0.0"></script>
+  <script src="js/inti.js?v=1.0.0"></script>
+  <script>
+    (function () {
+      'use strict';
+      var EA = window.EA, h = EA.h, ik = EA.ikon;
+      var isi = document.getElementById('vf-isi');
+      var k = new URLSearchParams(location.search).get('k') || new URLSearchParams(location.hash.replace(/^#/, '')).get('k') || '';
+      document.getElementById('vf-logo').innerHTML = String(ik('sekolah'));
+      function status(jenis, ikon, judul, sub) {
+        return h`<div class="vf-status ${jenis}">${ik(ikon)}<div><b>${judul}</b><span>${sub}</span></div></div>`;
+      }
+      function tampilGagal(judul, pesan) {
+        EA.html(isi, h`${status('tidak', 'galat', judul, pesan)}<p class="redup" style="margin:0">Jika Anda menerima dokumen ini secara resmi, hubungi Tata Usaha instansi penerbit untuk konfirmasi. Dokumen yang QR-nya tidak valid kemungkinan telah diubah atau bukan berasal dari E-Agenda.</p>`);
+      }
+      if (!EA.konfigSah()) { tampilGagal('Konfigurasi belum lengkap', 'Alamat server belum diisi pada js/config.js.'); return; }
+      if (!/^[A-Za-z0-9-]+\.[A-Za-z0-9_-]{10,}$/.test(k)) { tampilGagal('KODE QR TIDAK VALID', 'Tautan verifikasi tidak lengkap atau rusak.'); return; }
+      // logo & nama instansi (tidak menghambat hasil verifikasi)
+      EA.api.get({ action: 'info' }).then(function (r) {
+        if (!r || !r.success || !r.data) return;
+        if (r.data.nama) document.getElementById('vf-inst').textContent = r.data.nama;
+        if (r.data.logo) EA.html(document.getElementById('vf-logo'), h`<img src="${r.data.logo}" alt="">`);
+      }).catch(function () {});
+      var STATUS = { Belum: 'Belum didisposisikan', Proses: 'Sedang ditindaklanjuti', Selesai: 'Selesai ditindaklanjuti' };
+      EA.api.get({ action: 'verifikasi', k: k }).then(function (r) {
+        if (!r || !r.success) { tampilGagal(r && r.code === 'TIDAK_ADA' ? 'DOKUMEN TIDAK DITEMUKAN' : 'KODE QR TIDAK VALID', (r && r.message) || 'Verifikasi gagal.'); return; }
+        var d = r.data;
+        if (d.instansi) document.getElementById('vf-inst').textContent = d.instansi;
+        document.title = 'Terverifikasi: No. Agenda ' + d.noAgenda + ' · E-Agenda';
+        var persen = d.jumlah ? Math.round((d.selesai / d.jumlah) * 100) : 0;
+        var ikonTl = { ok: 'cek', info: 'kirim', proses: 'jampasir' };
+        EA.html(isi, h`${status('sah', 'perisai', 'DOKUMEN TERVERIFIKASI SAH', 'Terdaftar di Buku Agenda persuratan resmi ' + (d.instansi || ''))}
+          <div class="dt-grid">
+            <div class="dt"><div class="l">No. Agenda</div><div class="v mono tebal">${d.noAgenda}</div></div>
+            <div class="dt"><div class="l">Tanggal Terima</div><div class="v">${EA.tglPanjang(d.tglTerima)}</div></div>
+            <div class="dt"><div class="l">Nomor Surat</div><div class="v mono">${d.noSurat}</div></div>
+            <div class="dt"><div class="l">Sifat</div><div class="v"><span class="lc s-${d.sifat}">${d.sifat}</span></div></div>
+            <div class="dt penuh"><div class="l">Asal Surat</div><div class="v">${d.asal}</div></div>
+            <div class="dt penuh"><div class="l">Perihal</div><div class="v">${d.perihal}</div></div>
+            <div class="dt"><div class="l">Penandatangan Disposisi</div><div class="v">${d.penandatangan || '-'}${d.jabatan ? h`<div class="redup kecil">${d.jabatan}</div>` : ''}</div></div>
+            <div class="dt"><div class="l">Status Tindak Lanjut</div><div class="v">${STATUS[d.status] || d.status} ${d.jumlah ? h`<span class="redup">(${d.selesai}/${d.jumlah} bidang selesai)</span>` : ''}
+              ${d.jumlah ? h`<div class="progres"><i style="width:${persen}%"></i></div>` : ''}${d.terlambat ? h`<div class="kecil" style="color:var(--bahaya-tua);margin-top:4px">${d.terlambat} disposisi melewati batas waktu</div>` : ''}</div></div>
+          </div>
+          <h3>RIWAYAT PENANGANAN</h3>
+          <div class="tl">${(d.riwayat || []).map(function (x) {
+            return h`<div class="tl-i ${x.s}"><span class="tit">${ik(ikonTl[x.s] || 'info')}</span><div><b>${x.t}</b><div class="w">${EA.waktu(x.w)} WIB${x.k ? ' · ' + x.k : ''}</div></div></div>`;
+          })}</div>
+          <p class="redup kecil" style="margin:18px 0 0">Diperiksa ${EA.waktu(Date.now())} WIB · Algoritma HMAC-SHA256 · Kode ${k.split('.')[0]}</p>`);
+      }).catch(function () {
+        tampilGagal('Tidak dapat menghubungi server', 'Periksa koneksi internet lalu muat ulang halaman ini.');
+      });
+    })();
+  </script>
+</body>
+</html>

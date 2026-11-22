@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>E-Agenda · Agenda &amp; Disposisi Digital</title>
+  <meta name="description" content="E-Agenda — agenda surat masuk, surat keluar, dan disposisi digital dengan notifikasi WhatsApp.">
+  <meta name="theme-color" content="#0B1437">
+  <meta name="color-scheme" content="light">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="E-Agenda">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <!-- Koneksi dini ke backend & Google agar panggilan pertama tidak menunggu DNS/TLS -->
+  <link rel="preconnect" href="https://script.google.com" crossorigin>
+  <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://accounts.google.com">
+  <!-- Huruf dimuat tanpa menghambat tampilan pertama (fallback: huruf sistem) -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="css/style.css?v=1.0.0">
+</head>
+<body>
+  <div id="app"></div>
+  <div class="splash" id="splash" role="status" aria-live="polite">
+    <div class="logo-s"><div class="putar"></div><span>E-Agenda</span></div>
+  </div>
+  <noscript>
+    <div style="position:fixed;inset:0;display:grid;place-items:center;background:#0B1437;color:#fff;font:16px system-ui;padding:24px;text-align:center;z-index:200">
+      E-Agenda membutuhkan JavaScript. Aktifkan JavaScript di peramban Anda lalu muat ulang halaman.
+    </div>
+  </noscript>
+  <script src="js/config.js?v=1.0.0"></script>
+  <script src="js/inti.js?v=1.0.0" defer></script>
+  <script src="js/data.js?v=1.0.0" defer></script>
+  <script src="js/ui.js?v=1.0.0" defer></script>
+  <script src="js/grafik.js?v=1.0.0" defer></script>
+  <script src="js/ekspor.js?v=1.0.0" defer></script>
+  <script src="js/hal-utama.js?v=1.0.0" defer></script>
+  <script src="js/hal-admin.js?v=1.0.0" defer></script>
+  <script src="js/app.js?v=1.0.0" defer></script>
+</body>
+</html>

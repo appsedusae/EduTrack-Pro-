@@ -1,0 +1,25 @@
+{
+  "name": "E-Agenda — Agenda & Disposisi Digital",
+  "short_name": "E-Agenda",
+  "description": "Agenda surat masuk, surat keluar, dan disposisi digital dengan notifikasi WhatsApp.",
+  "lang": "id",
+  "dir": "ltr",
+  "start_url": "./#/dashboard",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0B1437",
+  "theme_color": "#0B1437",
+  "categories": ["productivity", "business", "education"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Kotak Disposisi", "short_name": "Disposisi", "url": "./#/disposisi", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Surat Keluar", "short_name": "Surat Keluar", "url": "./#/surat-keluar", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Cari Arsip", "short_name": "Cari", "url": "./#/arsip", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
