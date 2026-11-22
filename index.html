@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7C5CFF">
+  <meta name="description" content="Portal e-course berbasis learning path: roadmap modul bertahap, progres otomatis, materi privat.">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>EduTrack Pro</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%237C5CFF'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='700' font-size='34' text-anchor='middle' fill='white'%3EE%3C/text%3E%3C/svg%3E">
+
+  <!-- Koneksi awal: backend Apps Script (API + redirect respons) & CDN, agar panggilan pertama lebih cepat -->
+  <link rel="preconnect" href="https://script.google.com" crossorigin>
+  <link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
+
+  <!-- Tipografi: Outfit (judul) + Inter (isi) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Bootstrap 5: hanya reboot + grid + utilities (ringan, tanpa komponen berat) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-reboot.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-grid.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-utilities.min.css" rel="stylesheet">
+  <!-- Satu paket ikon konsisten -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <script>
+    // Tema diterapkan SEBELUM render pertama agar layar tidak berkedip
+    (function () {
+      try {
+        var t = localStorage.getItem('et_tema') || 'sistem';
+        var gelap = t === 'gelap' || (t === 'sistem' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', gelap ? 'dark' : 'light');
+      } catch (e) { }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="top-progress" id="topProgress" aria-hidden="true"></div>
+
+  <!-- ===================== LAYAR AWAL (splash / setup / galat) ===================== -->
+  <div class="layar-info" id="layarInfo">
+    <div class="splash">
+      <span class="logo logo-besar" data-logo>E</span>
+      <div class="splash-bar"><span></span></div>
+    </div>
+  </div>
+
+  <!-- ===================== LAYAR MASUK ===================== -->
+  <div class="masuk" id="layarMasuk" hidden>
+    <div class="masuk-kartu">
+      <section class="masuk-hero" aria-hidden="true">
+        <div class="masuk-merek"><span class="logo" data-logo>E</span><b data-nama-app>EduTrack Pro</b></div>
+        <h1>Belajar terarah, satu modul setiap kali.</h1>
+        <p data-tagline>Portal belajar berbasis learning path</p>
+        <ul class="masuk-poin">
+          <li><i class="bi bi-signpost-split"></i> Roadmap berurutan yang jelas</li>
+          <li><i class="bi bi-shield-lock"></i> Materi privat, hanya untuk member aktif</li>
+          <li><i class="bi bi-graph-up-arrow"></i> Progres &amp; jam belajar tercatat otomatis</li>
+        </ul>
+        <div class="masuk-hias">
+          <svg viewBox="0 0 120 120" class="ring-hias"><circle cx="60" cy="60" r="48" class="trk"/><circle cx="60" cy="60" r="48" class="val" pathLength="100" stroke-dasharray="72 100"/></svg>
+          <div class="masuk-hias-teks"><b>72%</b><small>Progres minggu ini</small></div>
+        </div>
+      </section>
+
+      <section class="masuk-form">
+        <!-- Langkah 1: email -->
+        <div id="masukLangkah1">
+          <h2>Masuk ke akun Anda</h2>
+          <p class="teks-2">Kami kirim kode 6 digit ke email terdaftar. Tidak perlu kata sandi.</p>
+          <div id="infoGoogle"></div>
+          <div id="areaGoogle" hidden>
+            <div id="tombolGoogle" class="tombol-google" aria-label="Login dengan Google"></div>
+            <div class="pemisah"><span>atau masuk dengan kode email</span></div>
+          </div>
+          <form id="formEmail" novalidate>
+            <label class="label" for="inEmail">Email</label>
+            <div class="input-ikon">
+              <i class="bi bi-envelope" aria-hidden="true"></i>
+              <input class="input" id="inEmail" type="email" autocomplete="email" inputmode="email" placeholder="nama@email.com" required>
+            </div>
+            <p class="galat-field" id="galatEmail" role="alert"></p>
+            <label class="cek"><input type="checkbox" id="inIngat" checked> <span>Ingat perangkat ini selama 14 hari</span></label>
+            <button class="btn btn-utama btn-blok" type="submit" id="btnKirimKode">Kirim Kode Masuk</button>
+          </form>
+          <button type="button" class="link-btn mt-3" data-act="tampil-darurat"><i class="bi bi-key"></i> Akses darurat admin</button>
+        </div>
+
+        <!-- Langkah 2: kode OTP -->
+        <div id="masukLangkah2" hidden>
+          <button type="button" class="link-btn mb-2" data-act="masuk-kembali"><i class="bi bi-arrow-left"></i> Ganti email</button>
+          <h2>Masukkan kode</h2>
+          <p class="teks-2">Kode dikirim ke <b id="emailTujuan"></b>. Berlaku 10 menit.</p>
+          <form id="formKode" novalidate>
+            <div class="otp" id="otpBox" role="group" aria-label="Kode 6 digit">
+              <input inputmode="numeric" maxlength="1" aria-label="Digit 1" autocomplete="one-time-code">
+              <input inputmode="numeric" maxlength="1" aria-label="Digit 2">
+              <input inputmode="numeric" maxlength="1" aria-label="Digit 3">
+              <input inputmode="numeric" maxlength="1" aria-label="Digit 4">
+              <input inputmode="numeric" maxlength="1" aria-label="Digit 5">
+              <input inputmode="numeric" maxlength="1" aria-label="Digit 6">
+            </div>
+            <p class="galat-field" id="galatKode" role="alert"></p>
+            <button class="btn btn-utama btn-blok" type="submit" id="btnVerifikasi">Masuk</button>
+          </form>
+          <button type="button" class="link-btn mt-3" data-act="kirim-ulang" id="btnKirimUlang" disabled>Kirim ulang kode</button>
+        </div>
+
+        <!-- Akses darurat -->
+        <div id="masukDarurat" hidden>
+          <button type="button" class="link-btn mb-2" data-act="masuk-kembali"><i class="bi bi-arrow-left"></i> Kembali</button>
+          <h2>Akses darurat admin</h2>
+          <p class="teks-2">Gunakan kredensial yang tercatat di log saat setup. Terkunci 15 menit setelah 5 kali gagal.</p>
+          <form id="formDarurat" novalidate>
+            <label class="label" for="inDUser">Username</label>
+            <input class="input" id="inDUser" autocomplete="username" value="darurat">
+            <label class="label mt-3" for="inDPass">Password</label>
+            <input class="input" id="inDPass" type="password" autocomplete="current-password">
+            <p class="galat-field" id="galatDarurat" role="alert"></p>
+            <button class="btn btn-utama btn-blok" type="submit" id="btnDarurat">Masuk</button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ===================== APLIKASI (SPA) ===================== -->
+  <div class="app" id="aplikasi" hidden>
+    <aside class="rail" aria-label="Navigasi utama">
+      <button type="button" class="rail-logo" data-act="nav" data-to="beranda" aria-label="Beranda"><span class="logo" data-logo>E</span></button>
+      <nav class="rail-nav" id="railNav"></nav>
+      <button type="button" class="rail-item rail-keluar" data-act="keluar" aria-label="Keluar" title="Keluar"><i class="bi bi-box-arrow-left"></i></button>
+    </aside>
+
+    <div class="main" id="main">
+      <header class="topbar">
+        <div class="topbar-kiri">
+          <button type="button" class="rail-logo logo-mobile" data-act="nav" data-to="beranda" aria-label="Beranda"><span class="logo" data-logo>E</span></button>
+          <nav class="breadcrumb-et" id="breadcrumb" aria-label="Lokasi halaman"></nav>
+        </div>
+        <div class="cari" id="cariWrap">
+          <i class="bi bi-search cari-ikon" aria-hidden="true"></i>
+          <input id="inCari" type="search" placeholder="Cari kursus, modul, atau topik" aria-label="Cari" autocomplete="off">
+          <button type="button" class="cari-filter" data-act="filter" aria-label="Filter kategori" title="Filter"><i class="bi bi-sliders2"></i></button>
+          <div class="popover cari-hasil" id="cariHasil" hidden></div>
+          <div class="popover pop-filter" id="popFilter" hidden></div>
+        </div>
+        <div class="topbar-kanan">
+          <button type="button" class="ikon-btn tampil-mobile" data-act="buka-cari" aria-label="Buka pencarian"><i class="bi bi-search"></i></button>
+          <span class="sync" id="syncChip" role="status" aria-live="polite"></span>
+          <button type="button" class="ikon-btn sembunyi-mobile" data-act="tema" aria-label="Ganti tema terang/gelap"><i class="bi bi-moon-stars" id="ikonTema"></i></button>
+          <div class="lonceng-wrap">
+            <button type="button" class="ikon-btn" data-act="lonceng" aria-label="Notifikasi"><i class="bi bi-bell"></i><span class="titik" id="titikNotif" hidden></span></button>
+            <div class="popover pop-notif" id="popNotif" hidden></div>
+          </div>
+          <button type="button" class="avatar-btn" data-act="nav" data-to="profil" aria-label="Profil saya">
+            <span class="avatar" id="avatarSaya">A</span>
+            <span class="avatar-teks"><b id="namaSaya">—</b><small id="peranSaya"></small></span>
+          </button>
+        </div>
+      </header>
+
+      <div id="bannerArea" class="banner-area"></div>
+
+      <!-- Semua halaman dirender SEKALI di klien; pindah menu = tampil/sembunyi (0 ms, tanpa reload) -->
+      <section class="view" id="v-beranda" data-view="beranda" tabindex="-1" aria-label="Beranda"></section>
+      <section class="view" id="v-kursus" data-view="kursus" tabindex="-1" aria-label="Kursus" hidden></section>
+      <section class="view" id="v-belajar" data-view="belajar" tabindex="-1" aria-label="Halaman belajar" hidden></section>
+      <section class="view" id="v-editor" data-view="editor" tabindex="-1" aria-label="Editor roadmap" hidden></section>
+      <section class="view" id="v-member" data-view="member" tabindex="-1" aria-label="Member &amp; akses" hidden></section>
+      <section class="view" id="v-progres" data-view="progres" tabindex="-1" aria-label="Progres" hidden></section>
+      <section class="view" id="v-pesan" data-view="pesan" tabindex="-1" aria-label="Pesan &amp; pengumuman" hidden></section>
+      <section class="view" id="v-profil" data-view="profil" tabindex="-1" aria-label="Profil" hidden></section>
+      <section class="view" id="v-pengaturan" data-view="pengaturan" tabindex="-1" aria-label="Pengaturan" hidden></section>
+    </div>
+
+    <nav class="bottomnav" id="bottomNav" aria-label="Navigasi bawah"></nav>
+  </div>
+
+  <!-- ===================== MODAL, DIALOG & TOAST ===================== -->
+  <div class="modal-et" id="modal" hidden>
+    <div class="modal-latar" data-act="tutup-modal"></div>
+    <div class="modal-kotak" id="modalKotak" role="dialog" aria-modal="true" aria-labelledby="modalJudul"></div>
+  </div>
+  <div class="modal-et modal-dialog-et" id="dialog" hidden>
+    <div class="modal-latar"></div>
+    <div class="modal-kotak modal-kecil" id="dialogKotak" role="alertdialog" aria-modal="true" aria-labelledby="dialogJudul"></div>
+  </div>
+  <div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="false"></div>
+
+  <noscript><div class="layar-info"><p>EduTrack Pro membutuhkan JavaScript. Aktifkan JavaScript di browser Anda.</p></div></noscript>
+
+  <!-- Urutan: config (GAS_URL) → app. Chart.js async agar tidak menunda tampilan pertama. -->
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" async></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>
