@@ -820,10 +820,18 @@
     const p = Math.max(0, Math.min(100, persen || 0));
     return '<div class="ring" aria-hidden="true"><svg viewBox="0 0 64 64"><circle class="trk" cx="32" cy="32" r="26"/><circle class="val" cx="32" cy="32" r="26" pathLength="100" stroke-dasharray="' + (p ? Math.max(p, 2) : 0) + ' 100"/></svg><div class="isi"><b>' + esc(atas) + '</b>' + (bawah ? '<small>' + esc(bawah) + '</small>' : '') + '</div></div>';
   }
+  window.sampulGagal = function (img) {
+    const m = String(img.src).match(/(?:lh3\.googleusercontent\.com\/d\/|[?&]id=)([-\w]{25,})/);
+    const n = Number(img.dataset.coba || 0);
+    if (m && n < 2) {
+      img.dataset.coba = n + 1;
+      img.src = n === 0 ? 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w1000' : 'https://drive.google.com/uc?export=view&id=' + m[1];
+    } else img.remove();
+  };
   function sampulHtml(k, ekstra) {
     const w = warnaKat(k.kategori);
     const isi = k.thumbnail_url && urlValid(k.thumbnail_url)
-      ? '<img src="' + esc(k.thumbnail_url) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">' : '';
+      ? '<img src="' + esc(k.thumbnail_url) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="sampulGagal(this)">' : '';
     return '<div class="sampul">' + '<div class="sampul-gen ' + w.g + '"><i class="bi ' + w.ikon + '" aria-hidden="true"></i><b>' + esc(k.judul) + '</b></div>' + isi + (ekstra || '') + '</div>';
   }
   function kartuKursus(k, mode) {
@@ -1874,7 +1882,7 @@
     $('#sampulEdit').innerHTML = '<div class="sampul"><img src="' + lokal + '" alt=""></div>';
     try {
       const r = await unggah(file, 'sampul', f => { st.textContent = 'Mengunggah cover… ' + Math.round(f * 100) + '%'; });
-      if (r.url) { $('#kThumb').value = r.url; st.textContent = 'Cover terunggah ke Drive. Menyimpan kursus…'; await simpanKursus(false); if (!$('#galatKursus').textContent) st.textContent = 'Cover tersimpan di Drive dan kursus sudah disimpan.'; else st.textContent = 'Cover terunggah, tetapi kursus belum tersimpan: ' + $('#galatKursus').textContent; }
+      if (r.url) { $('#kThumb').value = r.url; const im = new Image(); im.onerror = () => { st.textContent += ' Catatan: gambar belum bisa dimuat dari Drive; pastikan berkas dibagikan "Siapa saja yang memiliki link".'; }; im.referrerPolicy = 'no-referrer'; im.src = r.url; st.textContent = 'Cover terunggah ke Drive. Menyimpan kursus…'; await simpanKursus(false); if (!$('#galatKursus').textContent) st.textContent = 'Cover tersimpan di Drive dan kursus sudah disimpan.'; else st.textContent = 'Cover terunggah, tetapi kursus belum tersimpan: ' + $('#galatKursus').textContent; }
       else { st.textContent = r.peringatan || 'Cover terunggah tanpa URL publik.'; }
     } catch (e) { st.textContent = e.message; }
   }
