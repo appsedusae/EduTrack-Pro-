@@ -784,3 +784,19 @@ img { max-width: 100%; display: block; }
 .petunjuk-beli { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: var(--r-md); background: var(--lavender-2); margin: 4px 0 18px; font-size: 14px; line-height: 1.5; color: var(--teks); }
 .petunjuk-beli > i { font-size: 18px; color: var(--primary-teks); margin-top: 1px; flex: none; }
 .petunjuk-beli b { font-weight: 600; }
+
+/* Paket hemat */
+.kk.paket { cursor: default; border: 1.5px solid #FCD34D; background: linear-gradient(180deg, var(--peringatan-bg), var(--surface) 38%); }
+.kk.paket:hover { transform: none; }
+.paket-kepala { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 4px 0; }
+.paket-isi { list-style: none; margin: 0; padding: 0 4px; display: grid; gap: 8px; }
+.paket-isi li { display: flex; align-items: center; gap: 8px; font-size: 13.5px; min-width: 0; }
+.paket-isi li i { color: var(--primary-teks); flex: none; }
+.paket-isi li.punya i { color: var(--sukses); }
+.paket-isi li small { margin-left: auto; color: var(--teks-2); font-size: 12px; white-space: nowrap; flex: none; }
+.paket-isi li span { flex: 0 1 auto; min-width: 0; }
+.paket-harga { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding: 4px 4px 0; margin-top: auto; }
+.paket-harga b { font-family: var(--font-judul); font-size: 24px; }
+.paket-harga s { color: var(--teks-3); }
+.paket-harga small { color: var(--teks-2); margin-left: auto; }
+.kartu-paket-form { padding: 14px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--garis-2); margin-bottom: 18px; }
