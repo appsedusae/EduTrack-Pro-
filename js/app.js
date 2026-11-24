@@ -222,8 +222,16 @@
    * Aksi baca kembar yang sedang berjalan menumpang promise yang sama; aksi tulis menaikkan epoch
    * agar baca sesudahnya selalu mengambil data baru.
    */
+  // Aksi tulis yang aman diulang bila server sibuk (SIBUK = gagal dapat kunci, belum ada yang ditulis)
+  const AKSI_ULANG = new Set(['simpanKursus', 'simpanModul', 'urutkanModul', 'simpanProdukLynk', 'simpanPengaturan', 'ubahAkses']);
+  async function kirimDenganUlang(fn, args) {
+    for (let coba = 0; ; coba++) {
+      try { return await kirimApi(fn, args); }
+      catch (e) { if (e.kode !== 'SIBUK' || !AKSI_ULANG.has(fn) || coba >= 2) throw e; await tidur(2500 * (coba + 1)); }
+    }
+  }
   function server(fn, ...args) {
-    if (!AKSI_BACA.has(fn)) { epochTulis++; return kirimApi(fn, args); }
+    if (!AKSI_BACA.has(fn)) { epochTulis++; return kirimDenganUlang(fn, args); }
     const k = epochTulis + '|' + fn + '|' + JSON.stringify(args);
     if (_inflight.has(k)) return _inflight.get(k);
     const p = kirimApi(fn, args);
