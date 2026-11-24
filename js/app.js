@@ -851,6 +851,19 @@
       '<div class="kk-kaki"><span class="avatar kecil">' + esc(inisial(k.creator)) + '</span><div class="info"><b>' + esc(k.creator || 'Tim Pengajar') + '</b><small>' + (katalog ? (k.jumlah_modul || 0) + ' modul · ' + esc(k.level) : esc(k.level) + ' · ' + fmtDurasi(p ? p.totalMenit : 0)) + '</small></div>' + aksi + '</div>' +
       '</article>';
   }
+  function kartuPaket(p) {
+    const beli = p.url_beli ? '<a class="btn btn-utama btn-sm btn-blok" href="' + esc(p.url_beli) + '" target="_blank" rel="noopener" aria-label="Beli ' + esc(p.judul) + '"><i class="bi bi-bag"></i> Beli paket</a>' : '<span class="teks-2 kecil">Hubungi admin untuk membeli paket ini.</span>';
+    return '<article class="kk paket">' +
+      '<div class="paket-kepala"><span class="chip emas"><i class="bi bi-gift"></i> Paket hemat</span>' + (p.hemat_persen ? '<span class="chip sukses normal-case">Hemat ' + p.hemat_persen + '%</span>' : '') + '</div>' +
+      '<h3>' + esc(p.judul) + '</h3>' + (p.deskripsi ? '<p class="teks-2 kecil">' + esc(p.deskripsi) + '</p>' : '') +
+      '<ul class="paket-isi">' + p.kursus.map(k => '<li class="' + (k.dimiliki ? 'punya' : '') + '"><i class="bi ' + (k.dimiliki ? 'bi-check-circle-fill' : 'bi-mortarboard') + '" aria-hidden="true"></i><span class="potong">' + esc(k.judul) + '</span><small>' + (k.dimiliki ? 'Sudah dimiliki' : k.jumlah_modul + ' modul') + '</small></li>').join('') + '</ul>' +
+      '<div class="paket-harga">' + (p.harga_normal ? '<s>' + esc(rupiah(p.harga_normal)) + '</s>' : '') + '<b>' + esc(rupiah(p.harga)) + '</b><small>' + p.kursus.length + ' kursus sekaligus</small></div>' + beli + '</article>';
+  }
+  function bagianPaket() {
+    const list = (S.data && S.data.paket) || [];
+    if (isAdmin() || !list.length) return '';
+    return '<section><div class="kepala-bagian"><h2>Paket Hemat</h2><span class="teks-2 kecil">Beli sekali, dapat beberapa kelas</span></div><div class="grid-kursus">' + list.map(kartuPaket).join('') + '</div></section>';
+  }
   function kartuKursusAdmin(k) {
     const list = semuaModul(k.id_kursus);
     const akses = S.data.akses.filter(a => a.id_kursus === k.id_kursus && a.status_aktif === 'aktif');
@@ -983,6 +996,7 @@
       '<button type="button" class="ikon-btn kotak btn-garis" data-act="gulir" data-target="gulirSaya" data-arah="1" aria-label="Geser ke kanan"><i class="bi bi-chevron-right"></i></button></div></div>' +
       (kursus.length ? '<div class="gulir-x" id="gulirSaya">' + kursus.map(k => kartuKursus(k, 'member')).join('') + '</div>'
         : '<div class="kartu">' + kosongHtml('bi-journal-plus', 'Belum ada kursus aktif', 'Hubungi admin untuk mengaktifkan akses kursus Anda.', '') + '</div>') + '</section>' +
+      bagianPaket() +
       (S.data.katalog.length ? '<section><div class="kepala-bagian"><h2>Jelajahi Kursus Lain</h2><button type="button" class="btn btn-teks btn-sm" data-act="nav" data-to="kursus">Lihat semua</button></div>' +
         '<div class="gulir-x">' + S.data.katalog.slice(0, 8).map(k => kartuKursus(k, 'katalog')).join('') + '</div></section>' : '') +
       '</div><aside class="kolom">' +
@@ -1104,6 +1118,7 @@
       (q ? '<span class="chip normal-case">Pencarian: "' + esc(S.filter.cari) + '" <button type="button" class="ikon-btn" style="width:24px;height:24px;font-size:12px" data-act="hapus-cari" aria-label="Hapus pencarian"><i class="bi bi-x"></i></button></span>' : '') + '</div>' +
       (list.length ? '<div class="grid-kursus">' + list.map(k => adm ? kartuKursusAdmin(k) : kartuKursus(k, 'member')).join('') + '</div>'
         : '<div class="kartu">' + kosongHtml('bi-search', 'Tidak ada kursus yang cocok', 'Ubah filter atau kata kunci pencarian.', '') + '</div>') +
+      (bagianPaket() ? '<div class="mt-4">' + bagianPaket() + '</div>' : '') +
       (katalog.length ? '<div class="kepala-bagian mt-4"><h2>Katalog — belum dimiliki</h2><span class="teks-2 kecil">' + (katalog.some(x => x.url_beli) ? 'Beli sekali — akses terbuka otomatis setelah pembayaran' : 'Klik ikon email untuk meminta akses ke admin') + '</span></div><div class="grid-kursus">' + katalog.map(k => kartuKursus(k, 'katalog')).join('') + '</div>' : '');
   }
 
@@ -2184,7 +2199,7 @@
       '<ol class="langkah-lynk"><li>Di editor Apps Script jalankan <span class="kode-inline">tampilkanUrlWebhookLynk</span> lalu salin URL lengkap dari log — token rahasia hanya tampil di sana.</li><li>Dashboard Lynk.id → menu <b>Webhook</b> → tempel URL → simpan.</li><li>Petakan judul produk di bawah, lalu cek dengan <b>Simulasi</b>.</li></ol>' +
       '<p class="teks-2 kecil mt-2">' + (R.kirimUlang ? '<i class="bi bi-shield-check"></i> ' + R.kirimUlang + ' kiriman ulang diabaikan otomatis. ' : '') + (R.terakhir ? 'Order terakhir ' + fmtRelatif(R.terakhir) + '.' : 'Belum ada order masuk.') + '</p></div>' +
       '<div class="kartu"><div class="kartu-judul"><h2><span class="ikon-judul"><i class="bi bi-diagram-3"></i></span>Produk → kursus</h2><button type="button" class="btn btn-utama btn-sm" data-act="lynk-produk"><i class="bi bi-plus-lg"></i> Tambah</button></div>' +
-      (L.produk.length ? '<div class="daftar-set">' + L.produk.map(p => '<div class="set-item"><div class="t" style="min-width:0"><b class="potong d-block">' + esc(p.judul_produk) + '</b><small>' + (p.aktif === 'ya' ? 'Aktif' : 'Nonaktif') + (p.harga_min ? ' · min ' + rupiah(p.harga_min) : '') + (p.catatan ? ' · ' + esc(p.catatan) : '') + '</small><div class="mt-1">' + chipKursusHtml(p.id_kursus) + '</div></div>' +
+      (L.produk.length ? '<div class="daftar-set">' + L.produk.map(p => '<div class="set-item"><div class="t" style="min-width:0"><b class="potong d-block">' + esc(p.judul_produk) + '</b><small>' + (p.tampil_paket === 'ya' ? '<span class="chip emas normal-case" style="height:20px">Paket hemat</span> ' : '') + (p.aktif === 'ya' ? 'Aktif' : 'Nonaktif') + (p.harga_min ? ' · min ' + rupiah(p.harga_min) : '') + (p.catatan ? ' · ' + esc(p.catatan) : '') + '</small><div class="mt-1">' + chipKursusHtml(p.id_kursus) + '</div></div>' +
         '<div class="d-flex"><button type="button" class="ikon-btn" data-act="lynk-produk" data-id="' + esc(p.id) + '" aria-label="Ubah pemetaan ' + esc(p.judul_produk) + '"><i class="bi bi-pencil"></i></button><button type="button" class="ikon-btn bahaya" data-act="lynk-hapus-produk" data-id="' + esc(p.id) + '" aria-label="Hapus pemetaan ' + esc(p.judul_produk) + '"><i class="bi bi-trash3"></i></button></div></div>').join('') + '</div>'
         : '<p class="teks-2 kecil">Belum ada pemetaan. Tanpa pemetaan, judul produk Lynk dicocokkan dengan judul kursus; bila tidak cocok, order masuk "Perlu tinjau".</p>') +
       '<form class="mt-3" data-kirim="lynk-simulasi" novalidate><b class="d-block mb-2">Simulasi order <span class="teks-2 kecil">(tidak menulis data)</span></b><div class="field"><label class="label" for="simJudul">Judul produk di Lynk</label><input class="input" id="simJudul" maxlength="200" placeholder="mis. Kelas UI/UX Mastery"></div>' +
@@ -2224,14 +2239,24 @@
       '<div class="field"><span class="label">Kursus yang dibuka</span>' + pilihKursusHtml('plKursus', p ? p.id_kursus : []) + '</div>' +
       '<div class="row g-3"><div class="col-sm-6"><div class="field"><label class="label" for="plHarga">Harga minimal (opsional)</label><input class="input" id="plHarga" type="number" min="0" step="1000" inputmode="numeric" value="' + esc(p && p.harga_min ? p.harga_min : '') + '" placeholder="149000"><p class="bantuan">Total di bawah angka ini → "Perlu tinjau" (cegah kupon/harga salah).</p></div></div>' +
       '<div class="col-sm-6"><div class="field"><label class="label" for="plCatatan">Catatan</label><input class="input" id="plCatatan" maxlength="300" value="' + esc(p ? p.catatan : '') + '"></div></div></div>' +
-      '<label class="switch"><input type="checkbox" id="plAktif"' + (!p || p.aktif === 'ya' ? ' checked' : '') + '><span class="jalur"></span><span>Pemetaan aktif</span></label><p class="galat-field" id="plGalat"></p></div>' +
+      '<div class="kartu-paket-form"><label class="switch"><input type="checkbox" id="plPaket"' + (p && p.tampil_paket === 'ya' ? ' checked' : '') + '><span class="jalur"></span><span><b>Tampilkan sebagai Paket Hemat</b> di Beranda & menu Kursus member</span></label>' +
+      '<p class="bantuan">Perlu minimal 2 kursus. Paket hanya tampil bagi member yang belum memiliki semua kursusnya.</p>' +
+      '<div class="row g-3 mt-1"><div class="col-sm-6"><div class="field"><label class="label" for="plHargaTampil">Harga paket</label><input class="input" id="plHargaTampil" type="number" min="0" step="1000" inputmode="numeric" value="' + esc(p && p.harga_tampil ? p.harga_tampil : '') + '" placeholder="199000"></div></div>' +
+      '<div class="col-sm-6"><div class="field"><label class="label" for="plHargaNormal">Harga normal (dicoret, opsional)</label><input class="input" id="plHargaNormal" type="number" min="0" step="1000" inputmode="numeric" value="' + esc(p && p.harga_normal ? p.harga_normal : '') + '" placeholder="349000"></div></div></div>' +
+      '<div class="field"><label class="label" for="plUrlBeli">Link beli paket di Lynk</label><input class="input" id="plUrlBeli" type="url" inputmode="url" value="' + esc(p ? p.url_beli : '') + '" placeholder="https://lynk.id/akun-anda/paket"></div>' +
+      '<div class="field mb-0"><label class="label" for="plDesk">Keterangan singkat (opsional)</label><input class="input" id="plDesk" maxlength="300" value="' + esc(p ? p.deskripsi : '') + '"></div></div>' +
+      '<label class="switch mt-3"><input type="checkbox" id="plAktif"' + (!p || p.aktif === 'ya' ? ' checked' : '') + '><span class="jalur"></span><span>Pemetaan aktif</span></label><p class="galat-field" id="plGalat"></p></div>' +
       '<div class="modal-kaki"><span class="catatan"><i class="bi bi-table"></i><span>Sheet: <span class="mono">ProdukLynk</span></span></span><button type="button" class="btn btn-garis" data-act="tutup-modal">Batal</button><button type="submit" class="btn btn-utama" id="plSimpan">Simpan</button></div></form>');
   }
   async function simpanProdukLynkForm(form) {
-    const data = { id: form.dataset.id || '', judul_produk: $('#plJudul').value.trim(), id_kursus: $$('#plKursus [aria-pressed="true"]').map(b => b.dataset.id), harga_min: $('#plHarga').value, catatan: $('#plCatatan').value.trim(), aktif: $('#plAktif').checked ? 'ya' : 'tidak' };
+    const data = { id: form.dataset.id || '', judul_produk: $('#plJudul').value.trim(), id_kursus: $$('#plKursus [aria-pressed="true"]').map(b => b.dataset.id), harga_min: $('#plHarga').value, catatan: $('#plCatatan').value.trim(), aktif: $('#plAktif').checked ? 'ya' : 'tidak',
+      tampil_paket: $('#plPaket').checked ? 'ya' : 'tidak', harga_tampil: $('#plHargaTampil').value, harga_normal: $('#plHargaNormal').value, url_beli: $('#plUrlBeli').value.trim(), deskripsi: $('#plDesk').value.trim() };
     const g = $('#plGalat'); g.textContent = '';
     if (data.judul_produk.length < 2) { g.textContent = 'Isi judul produk persis seperti di Lynk.'; return; }
     if (!data.id_kursus.length) { g.textContent = 'Pilih minimal satu kursus.'; return; }
+    if (data.tampil_paket === 'ya' && data.id_kursus.length < 2) { g.textContent = 'Paket hemat perlu minimal 2 kursus.'; return; }
+    if (data.tampil_paket === 'ya' && !Number(data.harga_tampil)) { g.textContent = 'Isi harga paket agar tampil sebagai Paket Hemat.'; return; }
+    if (data.url_beli && !urlValid(data.url_beli)) { g.textContent = 'Link beli paket harus diawali https://'; return; }
     const btn = $('#plSimpan'); setTombol(btn, true, 'Menyimpan…');
     try {
       const p = await server('simpanProdukLynk', S.token, data);
