@@ -44,7 +44,8 @@
     video: { label: 'Video YouTube', ikon: 'bi-play-btn', pendek: 'Video' },
     dokumen: { label: 'Dokumen', ikon: 'bi-file-earmark-text', pendek: 'Dokumen' },
     zip: { label: 'Berkas ZIP', ikon: 'bi-file-earmark-zip', pendek: 'ZIP' },
-    tautan: { label: 'Tautan & Tugas', ikon: 'bi-box-arrow-up-right', pendek: 'Tautan' }
+    tautan: { label: 'Tautan & Tugas', ikon: 'bi-box-arrow-up-right', pendek: 'Tautan' },
+    html: { label: 'Kode HTML', ikon: 'bi-code-slash', pendek: 'HTML' }
   };
   const MAKS_UNGGAH = 50 * 1024 * 1024, MAKS_SAMPUL = 5 * 1024 * 1024;
   const EXT_DOKUMEN = '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.md,.csv';
@@ -1171,6 +1172,11 @@
     $('#blAside').innerHTML = asideBelajarHtml(k, m, list);
     breadcrumb();
   }
+  /** Kode HTML buatan admin ditampilkan di iframe ber-sandbox TANPA allow-same-origin: tidak bisa membaca token/data aplikasi. */
+  function srcdocHtml(kode) {
+    return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank">' +
+      '<style>html,body{margin:0}body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.6;color:#1F2937;padding:16px}img,video,iframe{max-width:100%}</style></head><body>' + String(kode || '') + '</body></html>';
+  }
   function playerHtml(k, m, list) {
     const st = statusModul(m, list);
     if (st === 'terkunci') {
@@ -1184,6 +1190,9 @@
       return '<div class="player"><img class="poster" src="https://i.ytimg.com/vi/' + id + '/hqdefault.jpg" alt="" loading="eager"><div class="lapis"></div>' +
         '<div class="judul-video"><span class="chip">M' + (list.indexOf(m) + 1) + '</span><span class="potong">' + esc(m.judul) + '</span></div>' +
         '<button type="button" class="tombol-putar" data-act="putar-video" aria-label="Putar video ' + esc(m.judul) + '"><i class="bi bi-play-fill"></i></button></div>';
+    }
+    if (m.tipe === 'html') {
+      return '<div class="player-html"><iframe sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms" referrerpolicy="no-referrer" loading="lazy" title="' + esc(m.judul) + '" srcdoc="' + esc(srcdocHtml(m.sumber)) + '"></iframe></div>';
     }
     if (m.tipe === 'tautan') {
       let host = ''; try { host = new URL(m.sumber).hostname; } catch (e) { }
@@ -1794,7 +1803,7 @@
     const bisaSeret = S.editor.tipe === 'semua';
     box.innerHTML = list.map(m => {
       const no = semua.indexOf(m) + 1, t = TIPE[m.tipe];
-      const sumber = m.tipe === 'video' ? 'YouTube · ' + m.sumber.replace(/^https:\/\/(www\.)?/, '') : m.tipe === 'tautan' ? m.sumber.replace(/^https:\/\//, '') : 'Google Drive Storage · ' + (m.nama_berkas || '');
+      const sumber = m.tipe === 'video' ? 'YouTube · ' + m.sumber.replace(/^https:\/\/(www\.)?/, '') : m.tipe === 'tautan' ? m.sumber.replace(/^https:\/\//, '') : m.tipe === 'html' ? 'Kode HTML · ' + angkaID(m.sumber.length, 0) + ' karakter' : 'Google Drive Storage · ' + (m.nama_berkas || '');
       const pras = m.prasyarat === 'TIDAK_ADA' ? '<span class="chip netral normal-case"><i class="bi bi-unlock"></i> Bebas akses</span>' : m.prasyarat !== 'SEBELUMNYA' && I.modul.get(m.prasyarat) ? '<span class="chip emas normal-case"><i class="bi bi-lock"></i> Setelah: ' + esc(I.modul.get(m.prasyarat).judul.slice(0, 24)) + '</span>' : (no > 1 ? '<span class="chip netral normal-case"><i class="bi bi-lock"></i> Prasyarat: modul ' + (no - 1) + '</span>' : '<span class="chip info normal-case">Modul pembuka</span>');
       return '<div class="mrow' + (m.status === 'draf' ? ' draf' : '') + '" data-id="' + esc(m.id_modul) + '"' + (m._tmp ? ' aria-busy="true"' : '') + '>' +
         (bisaSeret ? '<button type="button" class="pegangan" aria-label="Seret untuk mengubah urutan" title="Seret"><i class="bi bi-grip-vertical"></i></button>' : '') +
@@ -1985,6 +1994,10 @@
         '<div class="input-ikon"><i class="bi bi-youtube"></i><input class="input mono" id="mfUrl" data-ketik="mf-url" value="' + esc(MF.sumber) + '" placeholder="https://www.youtube.com/watch?v=…" inputmode="url"></div>' +
         '<p class="bantuan">Hanya menerima URL YouTube unlisted/publik. Format valid: <span class="mono">https://youtu.be/…</span> atau <span class="mono">https://www.youtube.com/watch?v=…</span></p><div id="ytPratinjau"></div></div>';
       pratinjauYt();
+    } else if (MF.tipe === 'html') {
+      box.innerHTML = '<div class="field"><label class="label" for="mfHtml"><i class="bi bi-code-slash"></i> Kode HTML</label><textarea class="textarea mono" id="mfHtml" data-ketik="mf-html" rows="9" spellcheck="false" placeholder="Tempel kode HTML atau kode embed (iframe) di sini">' + esc(MF.sumber) + '</textarea>' +
+        '<p class="bantuan" id="mfHtmlInfo"></p><p class="bantuan">Cocok untuk teks berformat, tabel, gambar, atau kode embed (Google Maps, Canva, Google Form, dsb.). Tampil di kotak terisolasi: skrip buatan sendiri tidak berjalan dan tidak bisa mengakses data aplikasi.</p></div>';
+      infoHtmlMF();
     } else if (MF.tipe === 'tautan') {
       box.innerHTML = '<div class="field"><label class="label" for="mfUrl">URL tautan / tugas</label><div class="input-ikon"><i class="bi bi-link-45deg"></i><input class="input" id="mfUrl" data-ketik="mf-url" value="' + esc(MF.sumber) + '" placeholder="https://forms.gle/… atau https://classroom.github.com/…" inputmode="url"></div><p class="bantuan">Google Form, GitHub Classroom, dokumen referensi, dan sejenisnya. Wajib https://.</p></div>';
     } else {
@@ -1996,6 +2009,12 @@
       else isi = '<label class="dropzone" data-drop="utama"><i class="bi bi-file-earmark-arrow-up"></i><b>Tarik & lepas ' + (MF.tipe === 'zip' ? 'berkas ZIP' : 'dokumen PDF/DOCX') + ' di sini atau telusuri</b><small class="teks-2">Batas kuota GAS Google Drive: maks 50 MB per berkas</small><input type="file" accept="' + akses + '" data-ubah="file-utama"></label>';
       box.innerHTML = '<div class="field"><span class="label">' + (MF.tipe === 'zip' ? 'Berkas ZIP utama' : 'Dokumen utama') + '</span>' + isi + '</div>';
     }
+  }
+  function infoHtmlMF() {
+    const i = $('#mfHtmlInfo'); if (!i || !MF) return;
+    const n = (MF.sumber || '').length;
+    i.textContent = angkaID(n, 0) + ' / 40.000 karakter' + (n > 40000 ? ' — terlalu panjang' : '');
+    i.style.color = n > 40000 ? 'var(--bahaya-teks)' : '';
   }
   function itemUnggahHtml(u, jenis, idx) {
     return '<div class="unggah-item"><i class="bi ' + (u.galat ? 'bi-exclamation-triangle-fill' : 'bi-cloud-arrow-up') + '" style="color:' + (u.galat ? 'var(--bahaya)' : 'var(--primary)') + '"></i><div style="flex:1;min-width:0"><b class="potong d-block kecil">' + esc(u.nama) + '</b>' +
@@ -2072,6 +2091,7 @@
     const m = MF;
     if (m.judul.trim().length < 3) return ['mfJudul', 'Judul modul minimal 3 karakter.'];
     if (m.tipe === 'video' && !ytId(m.sumber)) return ['mfUrl', 'URL video harus berasal dari YouTube.'];
+    if (m.tipe === 'html') { if (m.sumber.trim().length < 5) return ['mfHtml', 'Tempel kode HTML terlebih dahulu.']; if (m.sumber.length > 40000) return ['mfHtml', 'Kode HTML maksimal 40.000 karakter.']; }
     if (m.tipe === 'tautan' && !urlValid(m.sumber)) return ['mfUrl', 'Tautan harus diawali https://'];
     if ((m.tipe === 'dokumen' || m.tipe === 'zip') && !m.sumber) return [null, 'Unggah berkas ' + (m.tipe === 'zip' ? 'ZIP' : 'dokumen') + ' utama terlebih dahulu.'];
     const d = Number(m.durasi_menit || 0); if (d < 0 || d > 600) return ['mfDurasi', 'Durasi 0–600 menit.'];
@@ -2404,7 +2424,7 @@
       if (!MF || MF.tipe === el.dataset.v) return;
       const fileT = t => t === 'dokumen' || t === 'zip', lama = MF.tipe, baru = el.dataset.v;
       const kosongkan = () => { if (MF.unggah.utama) MF.unggah.utama.dibatalkan = true; MF.unggah.utama = null; MF.sumber = ''; MF.nama_berkas = ''; MF.ukuran_berkas = 0; };
-      if (fileT(lama) !== fileT(baru)) kosongkan(); // pindah antara berkas ↔ URL
+      if (fileT(lama) !== fileT(baru) || lama === 'html' || baru === 'html') kosongkan(); // pindah antara berkas ↔ URL
       else if (fileT(baru) && MF.nama_berkas && (kelasBerkas(MF.nama_berkas) === 'zip') !== (baru === 'zip')) kosongkan();
       MF.tipe = baru; MF.yt = null;
       $$('[data-act="modul-tipe"]').forEach(b => b.setAttribute('aria-pressed', b === el));
@@ -2464,6 +2484,7 @@
     'catatan': debounce(el => { LS.set('catatan_' + el.dataset.id, el.value); const s = $('#catatanStatus'); if (s) s.textContent = 'Tersimpan di perangkat ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }); }, 400),
     'hitung-email': el => { const e = pisahEmail(el.value); const salah = e.filter(x => !emailValid(x)).length; $('#akHitung').innerHTML = (e.length - salah) + ' email valid' + (salah ? ' · <span style="color:var(--bahaya-teks)">' + salah + ' tidak valid</span>' : ''); },
     'mf': el => { if (!MF) return; MF[el.dataset.f] = el.value; if (el.dataset.f === 'durasi_menit' && MF.tipe === 'video') pratinjauYt(); },
+    'mf-html': el => { if (!MF) return; MF.sumber = el.value; infoHtmlMF(); },
     'mf-url': el => { if (!MF) return; MF.sumber = el.value.trim(); el.classList.remove('galat'); if (MF.tipe === 'video') { pratinjauYt(); validasiYt(); } }
   };
   const KIRIM = {
