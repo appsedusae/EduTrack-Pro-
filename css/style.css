@@ -225,7 +225,7 @@ img { max-width: 100%; display: block; }
 .seg button { border: 0; background: transparent; min-height: 36px; padding: 0 14px; border-radius: var(--r-pill); font-weight: 600; font-size: 13px; color: var(--teks-2); cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--surface); color: var(--primary-teks); box-shadow: var(--bayang-1); }
 .tipe-pilih { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-@media (min-width: 560px) { .tipe-pilih { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 560px) { .tipe-pilih { grid-template-columns: repeat(5, 1fr); } }
 .tipe-pilih button {
   display: grid; justify-items: center; gap: 6px; padding: 14px 8px; border-radius: var(--r-md); border: 1px solid var(--garis);
   background: var(--surface); cursor: pointer; font-weight: 600; font-size: 13px; color: var(--teks-2); transition: all .15s; min-height: 76px;
@@ -800,3 +800,7 @@ img { max-width: 100%; display: block; }
 .paket-harga s { color: var(--teks-3); }
 .paket-harga small { color: var(--teks-2); margin-left: auto; }
 .kartu-paket-form { padding: 14px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--garis-2); margin-bottom: 18px; }
+
+/* Modul tipe Kode HTML: iframe ber-sandbox */
+.player-html { background: var(--surface); border: 1px solid var(--garis-2); border-radius: var(--radius, 16px); overflow: hidden; }
+.player-html iframe { display: block; width: 100%; min-height: 70vh; border: 0; background: #fff; }
